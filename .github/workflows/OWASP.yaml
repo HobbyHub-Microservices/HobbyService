@@ -21,22 +21,20 @@ jobs:
     # Step 2: Pull the Docker image
     - name: Pull Docker image
       run: |
-        REPO_NAME=$(basename "${{ github.repository }}" | tr '[:upper:]' '[:lower:]') # Convert to lowercase
-        IMAGE_NAME=${{ secrets.DOCKER_USER }}/$REPO_NAME
-        TAG=${{ github.sha }}
-        docker pull $IMAGE_NAME:$TAG
+        IMAGE_NAME=${{ secrets.DOCKER_USER }}/HobbyService
+        docker pull $IMAGE_NAME:latest
 
     # Step 3: Run the Docker container locally
     - name: Run the Docker container
       run: |
-        IMAGE_NAME=${{ github.event.workflow_run.outputs.image_name }}
-        docker run -d -p 8080:8080 --name app_container $IMAGE_NAME
+        IMAGE_NAME=${{ secrets.DOCKER_USER }}/HobbyService
+        docker run -d -p 8080:8080 --name app_container $IMAGE_NAME:latest
 
     # Step 4: Run OWASP ZAP Scan
     - name: OWASP ZAP Baseline Scan
       uses: zaproxy/action-baseline@v0.7.0
       with:
-        target: 'http://localhost:8080' # Update if your app uses a different port
+        target: 'http://localhost:8080' # Adjust the target URL if your app exposes a different port
         fail_on_warn: true
         rules_file: '.zap/rules.txt'
         report: true
