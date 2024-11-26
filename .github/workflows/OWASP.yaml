@@ -11,26 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Log in to Docker Hub
+    # Step 1: Derive Docker image name dynamically from the repo name
+    - name: Derive Docker image name
+      run: |
+        # Extract the repo name and convert it to lowercase
+        REPO_NAME=$(basename "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+        IMAGE_NAME="${{ secrets.DOCKER_USER }}/$REPO_NAME"
+        echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+    # Step 2: Log in to Docker Hub
     - name: Log in to Docker Hub
       env:
         DOCKER_USER: ${{ secrets.DOCKER_USER }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
-    # Step 2: Pull the Docker image
+    # Step 3: Pull the Docker image
     - name: Pull Docker image
       run: |
-        IMAGE_NAME=${{ secrets.DOCKER_USER }}/HobbyService
+        IMAGE_NAME=${{ env.IMAGE_NAME }}
         docker pull $IMAGE_NAME:latest
 
-    # Step 3: Run the Docker container locally
+    # Step 4: Run the Docker container locally
     - name: Run the Docker container
       run: |
-        IMAGE_NAME=${{ secrets.DOCKER_USER }}/HobbyService
+        IMAGE_NAME=${{ env.IMAGE_NAME }}
         docker run -d -p 8080:8080 --name app_container $IMAGE_NAME:latest
 
-    # Step 4: Run OWASP ZAP Scan
+    # Step 5: Run OWASP ZAP Scan
     - name: OWASP ZAP Baseline Scan
       uses: zaproxy/action-baseline@v0.7.0
       with:
@@ -40,13 +48,13 @@ jobs:
         report: true
         format: 'html'
 
-    # Step 5: Stop and clean up the Docker container
+    # Step 6: Stop and clean up the Docker container
     - name: Stop Docker container
       run: |
         docker stop app_container
         docker rm app_container
 
-    # Step 6: Upload OWASP ZAP report as an artifact
+    # Step 7: Upload OWASP ZAP report as an artifact
     - name: Upload OWASP ZAP Report
       if: always()
       uses: actions/upload-artifact@v3
