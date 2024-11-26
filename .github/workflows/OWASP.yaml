@@ -14,7 +14,6 @@ jobs:
     # Step 1: Derive Docker image name dynamically from the repo name
     - name: Derive Docker image name
       run: |
-        # Extract the repo name and convert it to lowercase
         REPO_NAME=$(basename "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
         IMAGE_NAME="${{ secrets.DOCKER_USER }}/$REPO_NAME"
         echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
@@ -26,19 +25,26 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
 
-    # Step 3: Pull the Docker image
-    - name: Pull Docker image
+    # Step 3: Debug - Check Docker version and login status
+    - name: Debug Docker
+      run: |
+        docker --version
+        docker info
+
+    # Step 4: Pull the correct OWASP ZAP image (zaproxy/zap-stable)
+    - name: Pull Docker image (OWASP ZAP)
       run: |
         IMAGE_NAME=${{ env.IMAGE_NAME }}
-        docker pull $IMAGE_NAME:latest
+        echo "Pulling Docker image: zaproxy/zap-stable"
+        sudo docker pull zaproxy/zap-stable:latest
 
-    # Step 4: Run the Docker container locally
+    # Step 5: Run the Docker container locally
     - name: Run the Docker container
       run: |
         IMAGE_NAME=${{ env.IMAGE_NAME }}
-        docker run -d -p 8080:8080 --name app_container $IMAGE_NAME:latest
+        docker run -d -p 8080:8080 --name app_container zaproxy/zap-stable:latest
 
-    # Step 5: Run OWASP ZAP Scan
+    # Step 6: Run OWASP ZAP Scan
     - name: OWASP ZAP Baseline Scan
       uses: zaproxy/action-baseline@v0.7.0
       with:
@@ -48,13 +54,13 @@ jobs:
         report: true
         format: 'html'
 
-    # Step 6: Stop and clean up the Docker container
+    # Step 7: Stop and clean up the Docker container
     - name: Stop Docker container
       run: |
         docker stop app_container
         docker rm app_container
 
-    # Step 7: Upload OWASP ZAP report as an artifact
+    # Step 8: Upload OWASP ZAP report as an artifact
     - name: Upload OWASP ZAP Report
       if: always()
       uses: actions/upload-artifact@v3
