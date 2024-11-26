@@ -1,0 +1,55 @@
+name: OWASP ZAP Scan
+
+on:
+  workflow_run:
+    workflows: ["Docker Image CI"] # Triggers after the Docker Image CI workflow
+    types:
+      - completed
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Log in to Docker Hub
+    - name: Log in to Docker Hub
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+
+    # Step 2: Pull the Docker image
+    - name: Pull Docker image
+      run: |
+        IMAGE_NAME=${{ github.event.workflow_run.outputs.image_name }}
+        docker pull $IMAGE_NAME
+
+    # Step 3: Run the Docker container locally
+    - name: Run the Docker container
+      run: |
+        IMAGE_NAME=${{ github.event.workflow_run.outputs.image_name }}
+        docker run -d -p 8080:8080 --name app_container $IMAGE_NAME
+
+    # Step 4: Run OWASP ZAP Scan
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:8080' # Update if your app uses a different port
+        fail_on_warn: true
+        rules_file: '.zap/rules.txt'
+        report: true
+        format: 'html'
+
+    # Step 5: Stop and clean up the Docker container
+    - name: Stop Docker container
+      run: |
+        docker stop app_container
+        docker rm app_container
+
+    # Step 6: Upload OWASP ZAP report as an artifact
+    - name: Upload OWASP ZAP Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ZAP-Report
+        path: owasp-zap-report.html
