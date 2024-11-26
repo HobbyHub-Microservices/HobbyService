@@ -32,7 +32,19 @@ jobs:
         docker build . --file Dockerfile --tag $IMAGE_NAME:$TAG
         echo "IMAGE_NAME=$IMAGE_NAME:$TAG" >> $GITHUB_ENV
 
-    # Step 4: Push the Docker image
+    # Step 4: Run the Docker container locally
+    - name: Run the Docker container
+      run: |
+        IMAGE_NAME=${{ env.IMAGE_NAME }}
+        docker run -d -p 8080:8080 --name app_container $IMAGE_NAME
+
+    # Step 5: Stop and clean up the Docker container
+    - name: Stop Docker container
+      run: |
+        docker stop app_container
+        docker rm app_container
+        
+    # Step 6: Push the Docker image
     - name: Push the Docker image to Docker Hub
       run: |
         IMAGE_NAME=${{ env.IMAGE_NAME }}
