@@ -25,7 +25,8 @@ public class MessageBusSubscriber : BackgroundService
         var factory = new ConnectionFactory()
         {
             HostName = _configuration["RabbitMQHost"],
-            Port = int.Parse(_configuration["RabbitMQPort"] ?? string.Empty)
+            Port = int.Parse(_configuration["RabbitMQPort"] ?? string.Empty),
+            ClientProvidedName = "HobbyHub"
         };
             _connection = factory.CreateConnection();
             Console.WriteLine("--> No RabbitMQ connection could be established.");
