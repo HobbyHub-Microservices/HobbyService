@@ -24,8 +24,10 @@ public class EventProcessor : IEventProcessor
             case EventType.UserPublished:
                 addUser(message);
                 break;
-            default:
+            case EventType.Undetermined:
+                Console.WriteLine(message);
                 break;
+                
        
         }
     }
@@ -33,17 +35,24 @@ public class EventProcessor : IEventProcessor
     private EventType DetermineEventType(string notificationMessage)
     {
         Console.WriteLine("--> DetermineEventType");
-        var eventType = JsonSerializer.Deserialize<GenericEventDto>(notificationMessage);
-
-            switch (eventType?.Event)
+     
+        try
+        {
+            var eventType = JsonSerializer.Deserialize<GenericEventDto>(notificationMessage);
+        
+            if (eventType?.Event == "User_Published")
             {
-                case "User_Published":
-                    Console.WriteLine("--> User Published event detected");
-                    return EventType.UserPublished;
-                default:
-                    Console.WriteLine("--> Unknown event type detected");
-                    return EventType.Undetermined;
+                Console.WriteLine("--> User_Published event detected");
+                return EventType.UserPublished;
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"--> Could not determine event type: {ex.Message}");
+        }
+
+        Console.WriteLine("--> Unknown event type detected");
+        return EventType.Undetermined;
     }
 
     private void addUser(string userPublishedMessage)

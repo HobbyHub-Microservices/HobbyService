@@ -3,6 +3,7 @@ using HobbyService.Data;
 using HobbyService.EventProcessing;
 using HobbyService.SyncDataServices.Grpc;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,9 +32,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// Add the Prometheus middleware
+app.UseRouting();
 
-// *** Enable routing for Controllers ***
-app.MapControllers();
+// Map the /metrics endpoint directly
+app.MapMetrics(); // This maps the Prometheus metrics endpoint
+
+// Map controllers or other routes directly
+app.MapControllers(); // If you have any API controllers
+
+// Optional: Add other middleware or configurations
+app.UseHttpMetrics(); // Enables HTTP metrics
 
 PrepDb.PrepPopulation(app);
 
@@ -45,4 +54,3 @@ catch (Exception ex)
 {
     Console.WriteLine($"Exception during app startup: {ex.Message}");
 }
-

@@ -22,12 +22,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkcore.InMemory" Version="8.0.10" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\users.proto" GrpcServices="Client"/>
+    <Protobuf Include="Protos\users.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>

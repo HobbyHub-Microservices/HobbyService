@@ -26,15 +26,21 @@ public class MessageBusSubscriber : BackgroundService
         {
             HostName = _configuration["RabbitMQHost"],
             Port = int.Parse(_configuration["RabbitMQPort"] ?? string.Empty),
-            ClientProvidedName = "HobbyHub"
+            ClientProvidedName = "HobbyHub_Dev"
         };
             _connection = factory.CreateConnection();
-            Console.WriteLine("--> No RabbitMQ connection could be established.");
-            
+            Console.WriteLine("--> RabbitMQ connection is established.");
             _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(exchange: "trigger", type: ExchangeType.Fanout);
+            _channel.ExchangeDeclare(exchange: "amq.topic", type: ExchangeType.Topic, durable: true);
             _queueName = _channel.QueueDeclare().QueueName;
-            _channel.QueueBind(queue: _queueName, exchange: "trigger", routingKey: "");
+            
+            
+            _channel.QueueBind(queue: _queueName, exchange: "amq.topic", routingKey: "KK.EVENT.*.HobbyHub.SUCCESS.#");
+            _channel.QueueBind(queue: _queueName, exchange: "amq.topic", routingKey: "KK.EVENT.*.HobbyHub.ERROR.#");
+            
+            // Binding to the user.topic exchange
+            _channel.ExchangeDeclare(exchange: "user.topic", type: ExchangeType.Topic, durable: false);
+            _channel.QueueBind(queue: _queueName, exchange: "user.topic", routingKey: "user.add");
             
             Console.WriteLine("--> Listening on the Message Bus");
             
@@ -47,13 +53,15 @@ public class MessageBusSubscriber : BackgroundService
         stoppingToken.ThrowIfCancellationRequested();
         
         var consumer = new EventingBasicConsumer(_channel);
-
+        
         consumer.Received += (ModuleHandle, ea) =>
         {
             Console.WriteLine($"--> Received message: {ea.Body}");
             var body = ea.Body;
             var notificationMessage = Encoding.UTF8.GetString(body.ToArray());
-
+            
+            Console.WriteLine($"--> Message encoded: {notificationMessage}");
+            
             _eventProcessor.ProcessEvent(notificationMessage);
         };
         
