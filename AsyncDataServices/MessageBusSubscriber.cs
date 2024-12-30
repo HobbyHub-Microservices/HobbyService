@@ -1,11 +1,14 @@
 ﻿using System.Text;
+using System.Text.Json;
+using HobbyService.Data;
+using HobbyService.DTO;
 using HobbyService.EventProcessing;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace HobbyService.AsyncDataServices;
 
-public class MessageBusSubscriber : BackgroundService
+public class MessageBusSubscriber : BackgroundService, IMessageBusSubscriber
 {
     private readonly IConfiguration _configuration;
     private readonly IEventProcessor _eventProcessor;
@@ -13,7 +16,7 @@ public class MessageBusSubscriber : BackgroundService
     private IModel _channel;
     private string _queueName;
 
-    public MessageBusSubscriber(IConfiguration configuration, IEventProcessor eventProcessor)
+    public MessageBusSubscriber(IConfiguration configuration, IEventProcessor eventProcessor) 
     {
         _configuration = configuration;
         _eventProcessor = eventProcessor;
@@ -31,21 +34,52 @@ public class MessageBusSubscriber : BackgroundService
             _connection = factory.CreateConnection();
             Console.WriteLine("--> RabbitMQ connection is established.");
             _channel = _connection.CreateModel();
+            
             _channel.ExchangeDeclare(exchange: "amq.topic", type: ExchangeType.Topic, durable: true);
+            _channel.ExchangeDeclare(exchange: "post.topic", type: ExchangeType.Topic, durable: true);
+            
             _queueName = _channel.QueueDeclare().QueueName;
             
             
             _channel.QueueBind(queue: _queueName, exchange: "amq.topic", routingKey: "KK.EVENT.*.HobbyHub.SUCCESS.#");
             _channel.QueueBind(queue: _queueName, exchange: "amq.topic", routingKey: "KK.EVENT.*.HobbyHub.ERROR.#");
             
-            // Binding to the user.topic exchange
-            _channel.ExchangeDeclare(exchange: "user.topic", type: ExchangeType.Topic, durable: false);
-            _channel.QueueBind(queue: _queueName, exchange: "user.topic", routingKey: "user.add");
+            _channel.QueueBind(queue: _queueName, exchange: "post.topic", routingKey: "post.hobby");
+            
+            
+            // // Binding to the user.topic exchange
+            // _channel.ExchangeDeclare(exchange: "user.topic", type: ExchangeType.Topic, durable: false);
+            // _channel.QueueBind(queue: _queueName, exchange: "user.topic", routingKey: "user.add");
             
             Console.WriteLine("--> Listening on the Message Bus");
             
             _connection.ConnectionShutdown += RabbitMQ_ConnectionShutDown;
 
+    }
+
+    public void PublishNewPost(HobbySendPublishedDto hobbyNamePublishedDto)
+    {
+        var message = JsonSerializer.Serialize(hobbyNamePublishedDto);
+        if (_connection.IsOpen)
+        {
+            Console.WriteLine($"--> Sending HobbyName to PostService: {message}");
+            SendMessageToPost(message);
+        }
+        else
+        {
+            Console.WriteLine($"--> RabbitMQ is closed, not able to send message");
+        }
+    }
+
+    private void SendMessageToPost(string message)
+    {
+        var body = Encoding.UTF8.GetBytes(message);
+        _channel.BasicPublish(
+            exchange: "post.topic",
+            routingKey: "post.hobby.receive",
+            basicProperties: null,
+            body: Encoding.UTF8.GetBytes(message));
+        Console.WriteLine($"--> Sent message to RabbitMQ PostService: {message}");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)

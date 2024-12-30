@@ -10,6 +10,7 @@ public class EventProcessor : IEventProcessor
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IMapper _mapper;
+    private readonly IHobbyRepo _hobbyRepo;
 
     public EventProcessor(IServiceScopeFactory serviceScopeFactory, IMapper mapper)
     {
@@ -22,13 +23,34 @@ public class EventProcessor : IEventProcessor
         switch (eventType)
         {
             case EventType.UserPublished:
-                addUser(message);
+                // addUser(message);
                 break;
             case EventType.Undetermined:
                 Console.WriteLine(message);
                 break;
-                
+            case EventType.PostPublished:
+                Console.WriteLine(message);
+                SendHobbyToPost(message);
+                break;
        
+        }
+    }
+
+    private void SendHobbyToPost(string message)
+    {
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var repo = scope.ServiceProvider.GetRequiredService<IHobbyRepo>();
+            var hobbyNamePublishedDTO = JsonSerializer.Deserialize<HobbyNamePublishedDTO>(message);
+        
+            try
+            {
+               repo.SendHobbyNameToPost(hobbyNamePublishedDTO);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not add User to DB {ex.Message}");
+            }
         }
     }
 
@@ -45,6 +67,12 @@ public class EventProcessor : IEventProcessor
                 Console.WriteLine("--> User_Published event detected");
                 return EventType.UserPublished;
             }
+            
+            if (eventType?.Event == "Post_Published")
+            {
+                Console.WriteLine("--> Post_Published event detected");
+                return EventType.PostPublished; 
+            }
         }
         catch (Exception ex)
         {
@@ -55,37 +83,38 @@ public class EventProcessor : IEventProcessor
         return EventType.Undetermined;
     }
 
-    private void addUser(string userPublishedMessage)
-    {
-        using (var scope = _serviceScopeFactory.CreateScope())
-        {
-            var repo = scope.ServiceProvider.GetRequiredService<IHobbyRepo>();
-            var userPublishedEventDto = JsonSerializer.Deserialize<UserPublishedDto>(userPublishedMessage);
-
-            try
-            {
-                var user = _mapper.Map<User>(userPublishedEventDto);
-                if (!repo.ExternalUserExists(user.ExternalId))
-                {
-                    repo.CreateUser(user);
-                    repo.SaveChanges();
-                    Console.WriteLine("--> User added");
-                }
-                else
-                {
-                    Console.WriteLine("--> User already exists");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Could not add User to DB {ex.Message}");
-            }
-        }
-    }
+    // private void addUser(string userPublishedMessage)
+    // {
+    //     using (var scope = _serviceScopeFactory.CreateScope())
+    //     {
+    //         var repo = scope.ServiceProvider.GetRequiredService<IHobbyRepo>();
+    //         var userPublishedEventDto = JsonSerializer.Deserialize<UserPublishedDto>(userPublishedMessage);
+    //
+    //         try
+    //         {
+    //             var user = _mapper.Map<User>(userPublishedEventDto);
+    //             if (!repo.ExternalUserExists(user.ExternalId))
+    //             {
+    //                 repo.CreateUser(user);
+    //                 repo.SaveChanges();
+    //                 Console.WriteLine("--> User added");
+    //             }
+    //             else
+    //             {
+    //                 Console.WriteLine("--> User already exists");
+    //             }
+    //         }
+    //         catch (Exception ex)
+    //         {
+    //             Console.WriteLine($"Could not add User to DB {ex.Message}");
+    //         }
+    //     }
+    // }
 
 }
 enum EventType
 {
     UserPublished,
-    Undetermined
+    Undetermined,
+    PostPublished
 }

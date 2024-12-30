@@ -12,16 +12,34 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("PostgressConn")));
+}
+else
+{
+    Console.WriteLine("--> Using PostgreSQL Server");
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("PostgressConn")));
+    
+    // builder.Services.AddDbContext<AppDbContext>(opt => 
+    //     opt.UseInMemoryDatabase("InMem")); 
+}
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddScoped<IUserDataClient, UserDataClient>();
-builder.Services.AddDbContext<AppDbContext>(opt => 
-    opt.UseInMemoryDatabase("InMem")); 
+// builder.Services.AddScoped<IUserDataClient, UserDataClient>();
+// builder.Services.AddDbContext<AppDbContext>(opt => 
+//     opt.UseInMemoryDatabase("InMem")); 
+
 builder.Services.AddScoped<IHobbyRepo, HobbyRepo>();
 
 // *** Add Controllers ***
 builder.Services.AddControllers();
-builder.Services.AddHostedService<MessageBusSubscriber>();
+builder.Services.AddSingleton<IMessageBusSubscriber, MessageBusSubscriber>();
+// builder.Services.AddHostedService<MessageBusSubscriber>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

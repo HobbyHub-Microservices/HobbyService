@@ -15,8 +15,9 @@ public class Hobby
     
     public DateTime CreatedAt { get; set; }
     
-    [Required]
-    public int UserId { get; set; }
     
-    public required User User { get; set; }
+    // [Required]
+    // public int UserId { get; set; }
+    //
+    // public required User User { get; set; }
 }
