@@ -55,56 +55,48 @@ public static class PrepDb
                   context.Hobbies.AddRange(
                         new Hobby
                         {
-                              Id = 1,
                               Name = "Photography",
                               Description = "Capturing moments through a lens.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 2,
                               Name = "Gardening",
                               Description = "Growing and nurturing plants.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 3,
                               Name = "Cooking",
                               Description = "Creating delicious meals.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 4,
                               Name = "Hiking",
                               Description = "Exploring trails and nature.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 5,
                               Name = "Painting",
                               Description = "Expressing creativity on canvas.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 6,
                               Name = "Writing",
                               Description = "Crafting stories and sharing thoughts.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 7,
                               Name = "Fishing",
                               Description = "Relaxing by the water and catching fish.",
                               CreatedAt = DateTime.UtcNow
                         },
                         new Hobby
                         {
-                              Id = 8,
                               Name = "Gaming",
                               Description = "Playing video games across various platforms.",
                               CreatedAt = DateTime.UtcNow

@@ -8,7 +8,7 @@ using RabbitMQ.Client.Events;
 
 namespace HobbyService.AsyncDataServices;
 
-public class MessageBusSubscriber : BackgroundService, IMessageBusSubscriber
+public class MessageBusSubscriber : BackgroundService
 {
     private readonly IConfiguration _configuration;
     private readonly IEventProcessor _eventProcessor;
@@ -57,30 +57,8 @@ public class MessageBusSubscriber : BackgroundService, IMessageBusSubscriber
 
     }
 
-    public void PublishNewPost(HobbySendPublishedDto hobbyNamePublishedDto)
-    {
-        var message = JsonSerializer.Serialize(hobbyNamePublishedDto);
-        if (_connection.IsOpen)
-        {
-            Console.WriteLine($"--> Sending HobbyName to PostService: {message}");
-            SendMessageToPost(message);
-        }
-        else
-        {
-            Console.WriteLine($"--> RabbitMQ is closed, not able to send message");
-        }
-    }
 
-    private void SendMessageToPost(string message)
-    {
-        var body = Encoding.UTF8.GetBytes(message);
-        _channel.BasicPublish(
-            exchange: "post.topic",
-            routingKey: "post.hobby.receive",
-            basicProperties: null,
-            body: Encoding.UTF8.GetBytes(message));
-        Console.WriteLine($"--> Sent message to RabbitMQ PostService: {message}");
-    }
+
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {

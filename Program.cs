@@ -36,7 +36,7 @@ builder.Services.AddScoped<IHobbyRepo, HobbyRepo>();
 
 // *** Add Controllers ***
 builder.Services.AddControllers();
-builder.Services.AddSingleton<IMessageBusSubscriber, MessageBusSubscriber>();
+builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 // builder.Services.AddHostedService<MessageBusSubscriber>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
 

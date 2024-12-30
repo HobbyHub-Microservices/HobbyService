@@ -53,29 +53,42 @@ public class HobbyRepo : IHobbyRepo
     public Hobby GetHobby(int userId, int hobbyId) =>
         _context.Hobbies.FirstOrDefault(h =>  h.Id == hobbyId) ?? throw new InvalidOperationException();
 
-    public void CreateHobby(int userId, Hobby hobby)
+    public void CreateHobby(Hobby hobby)
     {
         ArgumentNullException.ThrowIfNull(hobby);
         _context.Hobbies.Add(hobby);
+    }
+
+    public Hobby GetHobby(int id)
+    {
+        return _context.Hobbies.FirstOrDefault(h => h.Id == id) ?? throw new InvalidOperationException();
     }
 
     public IEnumerable<Hobby> getAllHobbies()
     {
         return _context.Hobbies.ToList();
     }
+    
+    public void DeleteHobby(int questionId)
+    {
+        _context.Hobbies.Remove(GetHobby(questionId));
+    }
 
-    public void SendHobbyNameToPost(HobbyNamePublishedDTO message)
-    { 
-       Hobby Hobby =  _context.Hobbies.FirstOrDefault(h => message != null && h.Id == message.HobbyId)!;
-       if (Hobby != null)
-       {
-           var hobbySendPublishedDto = new HobbySendPublishedDto
-           {
-               HobbyName = Hobby.Name
-           };
-           
-       }
-       
+    public bool HobbyExists(int hobbyId)
+    {
+        return _context.Hobbies.Any(q => q.Id == hobbyId);
+    }
+    
+    public void UpdateHobby(Hobby hobby)
+    {
+        if (HobbyExists(hobby.Id))
+        {
+            _context.Hobbies.Update(hobby);
+        }
+        else
+        {
+            throw new InvalidOperationException($"Hobby with id {hobby.Id} not found");
+        }
     }
 
 

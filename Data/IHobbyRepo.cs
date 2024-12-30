@@ -16,11 +16,19 @@ public interface IHobbyRepo
     // //Hobbies
     // IEnumerable<Hobby> getHobbiesForUser(int userId);
     Hobby GetHobby(int userId, int hobbyId);
-    void CreateHobby(int userId, Hobby hobby);
+    void CreateHobby(Hobby hobby);
+    
+    Hobby GetHobby(int id);
     
     IEnumerable<Hobby> getAllHobbies();
-    
-    public void SendHobbyNameToPost(HobbyNamePublishedDTO message);
-    
-    
+
+    void DeleteHobby(int questionId);
+    bool HobbyExists(int hobbyId);
+
+    void UpdateHobby(Hobby hobby);
+
+
+
+
+
 }

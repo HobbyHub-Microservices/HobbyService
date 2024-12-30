@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using AutoMapper;
+using HobbyService.AsyncDataServices;
 using HobbyService.Data;
 using HobbyService.DTO;
 using HobbyService.Models;
@@ -10,7 +11,6 @@ public class EventProcessor : IEventProcessor
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IMapper _mapper;
-    private readonly IHobbyRepo _hobbyRepo;
 
     public EventProcessor(IServiceScopeFactory serviceScopeFactory, IMapper mapper)
     {
@@ -30,30 +30,12 @@ public class EventProcessor : IEventProcessor
                 break;
             case EventType.PostPublished:
                 Console.WriteLine(message);
-                SendHobbyToPost(message);
+                // SendHobbyToPost(message);
                 break;
        
         }
     }
-
-    private void SendHobbyToPost(string message)
-    {
-        using (var scope = _serviceScopeFactory.CreateScope())
-        {
-            var repo = scope.ServiceProvider.GetRequiredService<IHobbyRepo>();
-            var hobbyNamePublishedDTO = JsonSerializer.Deserialize<HobbyNamePublishedDTO>(message);
-        
-            try
-            {
-               repo.SendHobbyNameToPost(hobbyNamePublishedDTO);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Could not add User to DB {ex.Message}");
-            }
-        }
-    }
-
+    
     private EventType DetermineEventType(string notificationMessage)
     {
         Console.WriteLine("--> DetermineEventType");
