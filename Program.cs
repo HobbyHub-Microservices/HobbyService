@@ -39,17 +39,27 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 // builder.Services.AddHostedService<MessageBusSubscriber>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAllOrigins");
 // Add the Prometheus middleware
 app.UseRouting();
 
@@ -63,7 +73,6 @@ app.MapControllers(); // If you have any API controllers
 app.UseHttpMetrics(); // Enables HTTP metrics
 
 PrepDb.PrepPopulation(app);
-
 try
 {
     app.Run();
