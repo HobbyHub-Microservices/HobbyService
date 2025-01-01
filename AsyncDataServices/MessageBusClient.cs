@@ -63,12 +63,12 @@ public class MessageBusClient : IMessageBusClient
         Console.WriteLine($"--> Sent message to RabbitMQ Post: {message}");
     }
 
-    public void HobbyDeleted(string message)
+    public void HobbyDeleted(string message, string exchange, string routingKey)
     {
         var body = Encoding.UTF8.GetBytes(message);
         _channel.BasicPublish(
-            exchange: "hobby.topic",
-            routingKey: "hobby.topic.delete",
+            exchange: exchange,
+            routingKey: routingKey,
             basicProperties: null,
             body: Encoding.UTF8.GetBytes(message));
         Console.WriteLine($"--> Sent message to RabbitMQ Post: {message}");
@@ -106,14 +106,30 @@ public class MessageBusClient : IMessageBusClient
         }
     }
 
-    public void SendMessage_HobbyDeleted(HobbyDeletePublishDTO hobbyEditPublishDto)
+    public void SendMessage_HobbyQueryDeleted(HobbyDeleteQueryPublishDTO hobbyEditQueryPublishDto)
     {
-        var message = JsonSerializer.Serialize(hobbyEditPublishDto);
+        var message = JsonSerializer.Serialize(hobbyEditQueryPublishDto);
         
         if (_connection.IsOpen)
         {
             Console.WriteLine($"--> Sending message to RabbitMQ: {message}");
-            HobbyDeleted(message);
+            HobbyDeleted(message, "hobby.query.topic", "hobby.topic.delete");
+        }
+        else
+        {
+            Console.WriteLine($"--> RabbitMQ is closed, not able to send message");
+        }
+    }
+
+    public void SendMessage_HobbyCommandDeleted(HobbyDeleteCommandPublishDTO hobbyEditCommandPublishDto)
+    {
+        var message = JsonSerializer.Serialize(hobbyEditCommandPublishDto);
+        
+        
+        if (_connection.IsOpen)
+        {
+            Console.WriteLine($"--> Sending message to RabbitMQ: {message}");
+            HobbyDeleted(message, "hobby.command.topic", "hobby.topic.delete");
         }
         else
         {

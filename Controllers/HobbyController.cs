@@ -45,6 +45,7 @@ namespace HobbyService.Controllers
         public IActionResult CreateHobby(HobbyCreateDto hobbyCreateDto)
         {
             var hobby = _mapper.Map<Hobby>(hobbyCreateDto);
+            hobby.CreatedAt = DateTime.UtcNow;
             _repository.CreateHobby(hobby);
             _repository.SaveChanges();
             
@@ -101,14 +102,21 @@ namespace HobbyService.Controllers
             try
             {
                 var HobbyName = _repository.GetHobby(id);
+                
+                Console.WriteLine($"--> Hobby found {HobbyName}");
+                var hobbyPublishQueryDto = _mapper.Map<HobbyDeleteQueryPublishDTO>(HobbyName);
+                var hobbyPublishCommandDto = _mapper.Map<HobbyDeleteCommandPublishDTO>(HobbyName);
+                hobbyPublishQueryDto.Event = "Hobby_Deleted";
+                hobbyPublishCommandDto.Event = "Hobby_Deleted";
                 _repository.DeleteHobby(id);
                 _repository.SaveChanges();
                 try
                 {
                     
-                    var hobbyPublishDto = _mapper.Map<HobbyDeletePublishDTO>(HobbyName);
-                    hobbyPublishDto.Event = "Hobby_Deleted";
-                    _messageBusClient.SendMessage_HobbyDeleted(hobbyPublishDto);
+                    
+                    
+                    _messageBusClient.SendMessage_HobbyQueryDeleted(hobbyPublishQueryDto);
+                    _messageBusClient.SendMessage_HobbyCommandDeleted(hobbyPublishCommandDto);
                 }
                 catch (Exception ex)
                 {

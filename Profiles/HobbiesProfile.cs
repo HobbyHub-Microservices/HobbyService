@@ -22,6 +22,9 @@ public class HobbiesProfile : Profile
            .ForMember(dest => dest.Hobbies, opt => opt.Ignore());
        
        CreateMap<HobbyReadDto, HobbyEditPublishDTO>();
-       CreateMap<Hobby, HobbyDeletePublishDTO>();
+       CreateMap<Hobby, HobbyDeleteQueryPublishDTO>()
+           .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name));
+       CreateMap<Hobby, HobbyDeleteCommandPublishDTO>()
+           .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
     }
 }
