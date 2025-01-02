@@ -64,6 +64,11 @@ public class HobbyRepo : IHobbyRepo
         return _context.Hobbies.FirstOrDefault(h => h.Id == id) ?? throw new InvalidOperationException();
     }
 
+    public Hobby GetHobbyByName(string hobbyName)
+    {
+        return _context.Hobbies.FirstOrDefault(h => h.Name == hobbyName) ?? throw new InvalidOperationException();
+    }
+
     public IEnumerable<Hobby> getAllHobbies()
     {
         return _context.Hobbies.ToList();

@@ -40,6 +40,18 @@ namespace HobbyService.Controllers
             
             return Ok(_mapper.Map<HobbyReadDto>(hobbyItem));
         }
+        
+        [HttpGet("hobbyname/{hobbyName}", Name = "GetHobbyByHobbyName")]
+        public ActionResult<HobbyReadDto> GetHobbyByHobbyName(string hobbyName)
+        {
+            var hobbyItem = _repository.GetHobbyByName(hobbyName);
+            if (hobbyItem == null)
+            {
+                return NotFound();
+            }
+            
+            return Ok(_mapper.Map<HobbyReadDto>(hobbyItem));
+        }
 
         [HttpPost]
         public IActionResult CreateHobby(HobbyCreateDto hobbyCreateDto)

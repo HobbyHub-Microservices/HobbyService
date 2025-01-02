@@ -20,6 +20,8 @@ public interface IHobbyRepo
     
     Hobby GetHobby(int id);
     
+    Hobby GetHobbyByName(string hobbyName);
+    
     IEnumerable<Hobby> getAllHobbies();
 
     void DeleteHobby(int questionId);
