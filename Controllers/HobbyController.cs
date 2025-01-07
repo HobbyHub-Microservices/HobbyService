@@ -3,11 +3,12 @@ using HobbyService.AsyncDataServices;
 using HobbyService.Data;
 using HobbyService.DTO;
 using HobbyService.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HobbyService.Controllers
 {
-    //the h is because of both the hobbyservice and the userservice have an usercontroller
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class HobbyController : ControllerBase
@@ -23,12 +24,14 @@ namespace HobbyService.Controllers
             _messageBusClient = messageBus;
         }
 
+        [Authorize]
         [HttpGet(Name = "GetAllHobbies")]
         public IActionResult GetAllHobbies()
         {
             return Ok(_repository.getAllHobbies());
         }
 
+        [Authorize]
         [HttpGet("{id}", Name = "GetHobbyById")]
         public ActionResult<HobbyReadDto> GetHobbyById(int id)
         {
@@ -41,6 +44,7 @@ namespace HobbyService.Controllers
             return Ok(_mapper.Map<HobbyReadDto>(hobbyItem));
         }
         
+        [Authorize]
         [HttpGet("hobbyname/{hobbyName}", Name = "GetHobbyByHobbyName")]
         public ActionResult<HobbyReadDto> GetHobbyByHobbyName(string hobbyName)
         {
@@ -52,7 +56,8 @@ namespace HobbyService.Controllers
             
             return Ok(_mapper.Map<HobbyReadDto>(hobbyItem));
         }
-
+        
+        [Authorize]
         [HttpPost]
         public IActionResult CreateHobby(HobbyCreateDto hobbyCreateDto)
         {
@@ -66,6 +71,7 @@ namespace HobbyService.Controllers
             return CreatedAtRoute(nameof(GetHobbyById), new {Id = hobbyReadDto.Id}, hobbyReadDto);
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public IActionResult UpdateHobby(int id, HobbyCreateDto hobbyCreateDto)
         {
@@ -104,6 +110,7 @@ namespace HobbyService.Controllers
             
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteHobby(int id)
         {
