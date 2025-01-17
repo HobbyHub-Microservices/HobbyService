@@ -1,10 +1,6 @@
-name: Run xUnit Integration Tests
+name: Run Integration Tests from External Repository
 
 on:
-  workflow_run:
-    workflows: ["Docker Image CI"] # Triggers after the Docker Image CI workflow
-    types:
-      - completed
   push:
     branches:
       - master
@@ -17,24 +13,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the repository
-    - name: Checkout repository
+    # Checkout the primary repository (service code)
+    - name: Checkout Service Repository
       uses: actions/checkout@v3
 
-    # Setup .NET environment
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    # Build the service repository
+    - name: Build Service
+      run: |
+        dotnet restore
+        dotnet build --configuration Release
+
+    # Start Docker (required for Testcontainers)
+    - name: Start Docker
+      run: sudo service docker start
+
+    # Clone the integration test repository
+    - name: Checkout IntegrationTest Repository
+      uses: actions/checkout@v3
       with:
-        dotnet-version: '8.0' # Use the appropriate .NET version for your project
+        repository: HobbyHub-Microservices/IntegrationTest
+        path: integration-tests # Checkout into a subdirectory
 
-    # Restore dependencies
-    - name: Restore dependencies
-      run: dotnet restore
+    # Run the integration tests
+    - name: Run xUnit Integration Tests
+      working-directory: integration-tests
+      run: dotnet test --configuration Release --logger:trx
+      env:
+        DOTNET_ENVIRONMENT: IntegrationTesting
+        TESTCONTAINERS_HOST_OVERRIDE: "localhost"
 
-    # Build the solution
-    - name: Build solution
-      run: dotnet build --no-restore --configuration Release
-
-    # Run integration tests
-    - name: Run xUnit integration tests
-      run: dotnet test 
+    # Upload test results
+    - name: Upload Test Results
+      if: failure() || success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-test-results
+        path: integration-tests/**/TestResults/*.trx
