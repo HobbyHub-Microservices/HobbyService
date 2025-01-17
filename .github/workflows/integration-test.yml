@@ -35,5 +35,5 @@ jobs:
 
     # Run the integration tests
     - name: Run xUnit Integration Tests
-      run: dotnet test 
+      run: dotnet test --logger "console;verbosity=detailed"
 
