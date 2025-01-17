@@ -1,12 +1,16 @@
 name: Run xUnit Integration Tests
 
 on:
+  workflow_run:
+    workflows: ["Docker Image CI"] # Triggers after the Docker Image CI workflow
+    types:
+      - completed
   push:
     branches:
-      - main
+      - master
   pull_request:
     branches:
-      - main
+      - master
 
 jobs:
   build-and-test:
